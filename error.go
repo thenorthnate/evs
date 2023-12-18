@@ -57,27 +57,51 @@ func NewTf[T any](message string, args ...any) *Error[T] {
 	return newError[T](initialSkip, fmt.Sprintf(message, args...))
 }
 
+func from[T any](skip int, wraps error, message string) error {
+	if wraps == nil {
+		return nil
+	}
+	skip++
+	check := &Error[T]{}
+	if errors.As(wraps, &check) {
+		return check
+	}
+	return newError[T](skip, message).Set(wraps)
+}
+
 // From first checks the given error to see if it already contains a [*Error]. If it does, it directly
 // returns the underlying [*Error]. Otherwise, it creates a new [*Error] that wraps the given error.
 // Use this method if you don't intend to "wrap" [*Error]'s but rather just have one single error that you
 // can pass around. Do note that this method assumes errors with type [*Error[Std]]. If you generated
 // the error with a generic type, use [FromT] instead.
-func From(wraps error) *Error[Std] {
-	check := &Error[Std]{}
-	if errors.As(wraps, &check) {
-		return check
-	}
-	return newError[Std](initialSkip, "").Set(wraps)
+func From(wraps error) error {
+	return from[Std](initialSkip, wraps, "")
+}
+
+// FromMsg
+func FromMsg(wraps error, message string) error {
+	return from[Std](initialSkip, wraps, message)
+}
+
+// FromMsgf
+func FromMsgf(wraps error, message string, args ...any) error {
+	return from[Std](initialSkip, wraps, fmt.Sprintf(message, args...))
 }
 
 // FromT works exactly the same way as [From] but is a generic method that requires you provide the generic
 // type. This way you can check for errors that use your own generic type such as those created by [NewT].
-func FromT[T any](wraps error) *Error[T] {
-	check := &Error[T]{}
-	if errors.As(wraps, &check) {
-		return check
-	}
-	return newError[T](initialSkip, "").Set(wraps)
+func FromT[T any](wraps error) error {
+	return from[T](initialSkip, wraps, "")
+}
+
+// FromTMsg
+func FromTMsg[T any](wraps error, message string) error {
+	return from[T](initialSkip, wraps, message)
+}
+
+// FromTMsgf
+func FromTMsgf[T any](wraps error, message string, args ...any) error {
+	return from[T](initialSkip, wraps, fmt.Sprintf(message, args...))
 }
 
 // Set directly assigns the given error to the internal wrapped error. It overrides any previously wrapped

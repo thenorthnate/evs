@@ -9,31 +9,19 @@ import (
 
 func TestNew(t *testing.T) {
 	err := New("terrible error")
-	require.Contains(t, err.Error(), "er.Err: terrible error")
+	require.Contains(t, err.Error(), "evs.Std: terrible error")
 	require.Contains(t, err.Error(), "[error_test.go:11]")
 }
 
 func TestNewf(t *testing.T) {
 	err := Newf("terrible error: %v", 10)
-	require.Contains(t, err.Error(), "er.Err: terrible error: 10")
+	require.Contains(t, err.Error(), "evs.Std: terrible error: 10")
 }
 
 func TestFrom(t *testing.T) {
 	err := errors.New("Hello, world")
 	newErr := From(err)
-	require.Contains(t, newErr.Error(), "er.Err: Hello, world")
-}
-
-func TestFromAndMessage(t *testing.T) {
-	err := errors.New("Hello, world")
-	newErr := From(err).Msg("oh no")
-	require.Contains(t, newErr.Error(), "er.Err: oh no\nHello, world")
-}
-
-func TestFromExisting(t *testing.T) {
-	err := New("oh no")
-	newErr := From(err)
-	require.Equal(t, "oh no", newErr.message)
+	require.Contains(t, newErr.Error(), "evs.Std: Hello, world")
 }
 
 func TestErrorKindMatters(t *testing.T) {
