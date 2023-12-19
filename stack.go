@@ -15,7 +15,7 @@ type Stack struct {
 	Frames []Frame
 }
 
-// GetStack returns the full set of frames excluding the frames within the er package
+// GetStack returns the full set of frames excluding the frames within the evs package
 // assuming an appropriate value for Skip has been supplied. To get the stack excluding the
 // call to [GetStack] itself (and everything beneath it), the value for skip should be 0.
 func GetStack(skip int) Stack {
