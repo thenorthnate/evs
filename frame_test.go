@@ -1,5 +1,3 @@
-//go:build whitebox
-
 package evs
 
 import (
