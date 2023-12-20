@@ -1,9 +1,9 @@
+//go:build whitebox
+
 package evs
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestFrameString(t *testing.T) {
@@ -12,5 +12,7 @@ func TestFrameString(t *testing.T) {
 		File:     "test.go",
 		Function: "TestFrameString",
 	}
-	require.Equal(t, "TestFrameString [test.go:23]", frame.String())
+	if "TestFrameString [test.go:23]" != frame.String() {
+		t.Fatal("output was not equal")
+	}
 }

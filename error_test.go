@@ -1,32 +1,37 @@
+//go:build whitebox
+
 package evs
 
 import (
 	"errors"
-	"fmt"
 	"log"
+	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
-	err := New().Msg("terrible error").Err()
-	fmt.Println(err)
-	require.Contains(t, err.Error(), "*evs.Error[github.com/thenorthnate/evs.Std]: terrible error")
-	require.Contains(t, err.Error(), "error_test.go")
+	err := New("terrible error").Err()
+	if !strings.Contains(err.Error(), "*evs.Error[github.com/thenorthnate/evs.Std]: terrible error") {
+		t.Fatal("error did not contain expected output")
+	}
+	if !strings.Contains(err.Error(), "error_test.go") {
+		t.Fatal("error did not contain expected output")
+	}
 }
 
 func TestRecordMsgf(t *testing.T) {
-	err := New().Msgf("terrible error: %v", 10).Err()
-	fmt.Println(err.Error())
-	require.Contains(t, err.Error(), "*evs.Error[github.com/thenorthnate/evs.Std]: terrible error: 10")
+	err := Newf("terrible error: %v", 10).Err()
+	if !strings.Contains(err.Error(), "*evs.Error[github.com/thenorthnate/evs.Std]: terrible error: 10") {
+		t.Fatal("error did not contain expected output")
+	}
 }
 
 func TestFrom(t *testing.T) {
 	err := errors.New("Hello, world")
 	newErr := From(err).Err()
-	fmt.Println(newErr.Error())
-	require.Contains(t, newErr.Error(), "*evs.Error[github.com/thenorthnate/evs.Std]: Hello, world")
+	if !strings.Contains(newErr.Error(), "*evs.Error[github.com/thenorthnate/evs.Std]: Hello, world") {
+		t.Fatal("error did not contain expected output")
+	}
 }
 
 func ExampleFrom() {
@@ -38,11 +43,17 @@ func ExampleFrom() {
 }
 
 func TestErrorKindMatters(t *testing.T) {
-	err := New().Msg("terrible error").Err()
+	err := New("terrible error").Err()
 	notExpect := &Error[string]{}
-	require.False(t, errors.As(err, &notExpect))
+	if errors.As(err, &notExpect) {
+		t.Fatalf("did not expect %T as the error type", notExpect)
+	}
 
 	expect := &Error[Std]{}
-	require.True(t, errors.As(err, &expect))
-	require.Len(t, expect.stack.Frames, 3)
+	if !errors.As(err, &expect) {
+		t.Fatalf("expected %T but that was not the type", expect)
+	}
+	if len(expect.stack.Frames) != 3 {
+		t.Fatalf("expected there to be 3 stack frames but got %v", len(expect.stack.Frames))
+	}
 }

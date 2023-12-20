@@ -17,14 +17,30 @@ func newRecord[T any](err *Error[T]) *Record[T] {
 }
 
 // New creates a new [Record] with the given message and the Std error type.
-func New() *Record[Std] {
+func New(msg string) *Record[Std] {
 	err := newError[Std](initialSkip)
+	err.message = msg
+	return newRecord(err)
+}
+
+// Newf creates a new [Record] with the given formatted message and the Std error type.
+func Newf(msg string, args ...any) *Record[Std] {
+	err := newError[Std](initialSkip)
+	err.message = fmt.Sprintf(msg, args...)
 	return newRecord(err)
 }
 
 // NewT creates a new [Record] with the given message and the generic type specified.
-func NewT[T any]() *Record[T] {
+func NewT[T any](msg string) *Record[T] {
 	err := newError[T](initialSkip)
+	err.message = msg
+	return newRecord(err)
+}
+
+// NewTf creates a new [Record] with the given formatted message and the generic type specified.
+func NewTf[T any](msg string, args ...any) *Record[T] {
+	err := newError[T](initialSkip)
+	err.message = fmt.Sprintf(msg, args...)
 	return newRecord(err)
 }
 

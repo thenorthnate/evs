@@ -1,15 +1,19 @@
+//go:build blackbox
+
 package evs_test
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/thenorthnate/evs"
 )
 
 func TestFrom(t *testing.T) {
 	err := errors.New("Hello, world")
 	newErr := evs.From(err).Err()
-	require.Contains(t, newErr.Error(), "*evs.Error[github.com/thenorthnate/evs.Std]: Hello, world")
+	if !strings.Contains(newErr.Error(), "*evs.Error[github.com/thenorthnate/evs.Std]: Hello, world") {
+		t.Fatal("error did not contain expected output")
+	}
 }
