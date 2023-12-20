@@ -1,6 +1,6 @@
 # evs
 
-[![GoDoc][doc-img]][doc]
+[![GoDoc][doc-img]][doc] [![Test][ci-img]][ci]
 
 package `evs` (error values with sugar) is another error generating package. It aims to be simple
 and yet contain a useful set of features such as generic error types, stack traces, and full
@@ -24,3 +24,5 @@ func MyFancyFunction() error {
 
 [doc-img]: https://pkg.go.dev/badge/github.com/thenorthnate/evs
 [doc]: https://pkg.go.dev/github.com/thenorthnate/evs
+[ci-img]: https://github.com/thenorthnate/evs/workflows/test/badge.svg
+[ci]: https://github.com/thenorthnate/evs/actions
