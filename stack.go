@@ -1,6 +1,7 @@
 package evs
 
 import (
+	"fmt"
 	"runtime"
 	"strings"
 )
@@ -9,6 +10,19 @@ const (
 	startStackDepth = 10
 	maxStackDepth   = 200
 )
+
+// Frame defines a single frame in a stack trace.
+type Frame struct {
+	Line     int
+	File     string
+	Function string
+}
+
+// String implements the [fmt.Stringer] interface.
+func (frame Frame) String() string {
+	fileParts := strings.Split(frame.File, "/")
+	return fmt.Sprintf("%v [%v:%v]", frame.Function, fileParts[len(fileParts)-1], frame.Line)
+}
 
 // Stack contains a stack trace made up of individual frames.
 type Stack struct {

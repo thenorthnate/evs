@@ -1,5 +1,7 @@
 package evs
 
+import "fmt"
+
 const (
 	// IOError can be used as the kind for errors related to IO operations.
 	IOError Std = "IOError"
@@ -12,3 +14,7 @@ const (
 // Std is the standard type used to generate new Errors. It is simply an alias for a string.
 // You can use your own types if desired.
 type Std string
+
+type Formatter[T any] interface {
+	Format(e *Error[T], f fmt.State, verb rune)
+}

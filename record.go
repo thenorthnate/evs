@@ -19,28 +19,28 @@ func newRecord[T any](err *Error[T]) *Record[T] {
 // New creates a new [Record] with the given message and the Std error type.
 func New(msg string) *Record[Std] {
 	err := newError[Std](initialSkip)
-	err.message = msg
+	err.Messages = append(err.Messages, msg)
 	return newRecord(err)
 }
 
 // Newf creates a new [Record] with the given formatted message and the Std error type.
 func Newf(msg string, args ...any) *Record[Std] {
 	err := newError[Std](initialSkip)
-	err.message = fmt.Sprintf(msg, args...)
+	err.Messages = append(err.Messages, fmt.Sprintf(msg, args...))
 	return newRecord(err)
 }
 
 // NewT creates a new [Record] with the given message and the generic type specified.
 func NewT[T any](msg string) *Record[T] {
 	err := newError[T](initialSkip)
-	err.message = msg
+	err.Messages = append(err.Messages, msg)
 	return newRecord(err)
 }
 
 // NewTf creates a new [Record] with the given formatted message and the generic type specified.
 func NewTf[T any](msg string, args ...any) *Record[T] {
 	err := newError[T](initialSkip)
-	err.message = fmt.Sprintf(msg, args...)
+	err.Messages = append(err.Messages, fmt.Sprintf(msg, args...))
 	return newRecord(err)
 }
 
@@ -68,20 +68,20 @@ func FromT[T any](err error) *Record[T] {
 }
 
 // Msg provides a mechanism to set the error message directly.
-func (rec *Record[T]) Msg(message string) *Record[T] {
+func (rec *Record[T]) Msg(msg string) *Record[T] {
 	if rec.err == nil {
 		return rec
 	}
-	rec.err.message = message
+	rec.err.Messages = append(rec.err.Messages, msg)
 	return rec
 }
 
 // Msgf is the same as [Record.Msg] except that it takes a variadic set of arguments.
-func (rec *Record[T]) Msgf(message string, args ...any) *Record[T] {
+func (rec *Record[T]) Msgf(msg string, args ...any) *Record[T] {
 	if rec.err == nil {
 		return rec
 	}
-	rec.err.message = fmt.Sprintf(message, args...)
+	rec.err.Messages = append(rec.err.Messages, fmt.Sprintf(msg, args...))
 	return rec
 }
 
@@ -92,7 +92,7 @@ func (rec *Record[T]) DropStack(message string, args ...any) *Record[T] {
 	if rec.err == nil {
 		return rec
 	}
-	rec.err.stack = Stack{}
+	rec.err.Stack = Stack{}
 	return rec
 }
 
@@ -102,7 +102,7 @@ func (rec *Record[T]) Kind(kind T) *Record[T] {
 	if rec.err == nil {
 		return rec
 	}
-	rec.err.kind = kind
+	rec.err.Kind = kind
 	return rec
 }
 
@@ -112,7 +112,17 @@ func (rec *Record[T]) Set(wraps error) *Record[T] {
 	if rec.err == nil {
 		return rec
 	}
-	rec.err.wraps = wraps
+	rec.err.Wraps = wraps
+	return rec
+}
+
+// Fmt allows you to set the Formatter you'd like to use which dictates how the messages are
+// printed out.
+func (rec *Record[T]) Fmt(f Formatter[T]) *Record[T] {
+	if rec.err == nil {
+		return rec
+	}
+	rec.err.F = f
 	return rec
 }
 
