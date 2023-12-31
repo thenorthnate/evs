@@ -4,17 +4,16 @@ import "fmt"
 
 const (
 	// IOError can be used as the kind for errors related to IO operations.
-	IOError Std = "IOError"
+	IOError ErrorKind = "IOError"
 	// TypeError can be used as the kind for errors related to type problems.
-	TypeError Std = "TypeError"
+	TypeError ErrorKind = "TypeError"
 	// ValueError can be used as the kind for errors any time an unexpected value is used.
-	ValueError Std = "ValueError"
+	ValueError ErrorKind = "ValueError"
 )
 
-// Std is the standard type used to generate new Errors. It is simply an alias for a string.
-// You can use your own types if desired.
-type Std string
+// ErrorKind defines a category for the error.
+type ErrorKind string
 
-type Formatter[T any] interface {
-	Format(e *Error[T], f fmt.State, verb rune)
+type Formatter interface {
+	Format(e *Error, f fmt.State, verb rune)
 }
