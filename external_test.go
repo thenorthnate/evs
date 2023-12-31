@@ -12,6 +12,6 @@ func TestExternalFrom(t *testing.T) {
 	err := errors.New("Hello, world")
 	newErr := evs.From(err).Err()
 	if !strings.Contains(newErr.Error(), "*evs.Error[github.com/thenorthnate/evs.Std]: Hello, world") {
-		t.Fatal("error did not contain expected output")
+		t.Fatalf("%v does not contain expected content", newErr.Error())
 	}
 }

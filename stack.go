@@ -2,6 +2,7 @@ package evs
 
 import (
 	"fmt"
+	"io"
 	"runtime"
 	"strings"
 )
@@ -18,10 +19,28 @@ type Frame struct {
 	Function string
 }
 
+// CurrentFrame gets the location information for the code point where this function was called from (or
+// anywhere up or down the stack from there depending on the skip value given.)
+func CurrentFrame(skip int) Frame {
+	skip++
+	pc, file, line, _ := runtime.Caller(skip)
+	function := runtime.FuncForPC(pc)
+	return Frame{
+		Line:     line,
+		File:     file,
+		Function: function.Name(),
+	}
+}
+
 // String implements the [fmt.Stringer] interface.
-func (frame Frame) String() string {
+func (frame Frame) Format(s fmt.State, verb rune) {
 	fileParts := strings.Split(frame.File, "/")
-	return fmt.Sprintf("%v [%v:%v]", frame.Function, fileParts[len(fileParts)-1], frame.Line)
+	switch verb {
+	case 's':
+		_, _ = fmt.Fprintf(s, "[%v:%v]", fileParts[len(fileParts)-1], frame.Line)
+	default:
+		_, _ = fmt.Fprintf(s, "%v [%v:%v]", frame.Function, fileParts[len(fileParts)-1], frame.Line)
+	}
 }
 
 // Stack contains a stack trace made up of individual frames.
@@ -76,11 +95,14 @@ func getCallerPCs(skip int) []uintptr {
 	}
 }
 
-// String implements the [fmt.Stringer] interface.
-func (stack Stack) String() string {
-	lines := make([]string, len(stack.Frames))
-	for index, frame := range stack.Frames {
-		lines[index] = frame.String()
+// String implements the [fmt.Formatter] interface.
+func (stack Stack) Format(s fmt.State, verb rune) {
+	if len(stack.Frames) == 0 {
+		return
 	}
-	return strings.Join(lines, "\n")
+	_, _ = io.WriteString(s, "\nWith Stacktrace:\n")
+	for _, frame := range stack.Frames {
+		frame.Format(s, verb)
+		_, _ = io.WriteString(s, "\n")
+	}
 }
