@@ -42,16 +42,16 @@ func ExampleFrom() {
 
 func TestErrorKindMatters(t *testing.T) {
 	err := New("terrible error").Err()
-	notExpect := &Error[string]{}
+	notExpect := &Error{}
 	if errors.As(err, &notExpect) {
 		t.Fatalf("did not expect %T as the error type", notExpect)
 	}
 
-	expect := &Error[Std]{}
+	expect := &Error{}
 	if !errors.As(err, &expect) {
 		t.Fatalf("expected %T but that was not the type", expect)
 	}
-	if len(expect.stack.Frames) != 3 {
-		t.Fatalf("expected there to be 3 stack frames but got %v", len(expect.stack.Frames))
+	if len(expect.Stack.Frames) != 3 {
+		t.Fatalf("expected there to be 3 stack frames but got %v", len(expect.Stack.Frames))
 	}
 }
