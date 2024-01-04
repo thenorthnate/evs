@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestStandardFormatter(t *testing.T) {
-	err := Error{
+func getTestError() Error {
+	return Error{
 		Wraps: errors.New("bad error"),
 		Stack: Stack{
 			Frames: []Frame{{
@@ -23,15 +23,41 @@ func TestStandardFormatter(t *testing.T) {
 				Function: "SomeOtherFunctionName",
 			},
 		}},
-		f: StandardFormatter{},
+		f: standardFormatter{},
 	}
+}
+
+func TestStandardFormatter(t *testing.T) {
+	err := getTestError()
 	result := err.Error()
 	expect := `bad error
-[file.go:1] oh no!
+SomeOtherFunctionName [file.go:1] oh no!
 
 With Stacktrace:
 FunctionName [file.go:0]`
 	if result != expect {
-		t.Fatalf("Expected %v but got %v", expect, result)
+		t.Fatalf("Expected\n%v\nbut got\n%v", expect, result)
+	}
+}
+
+func TestStandardFormatterNoStack(t *testing.T) {
+	err := getTestError()
+	err.Stack = Stack{}
+	result := err.Error()
+	expect := `bad error
+SomeOtherFunctionName [file.go:1] oh no!`
+	if result != expect {
+		t.Fatalf("Expected\n%v\nbut got\n%v", expect, result)
+	}
+}
+
+func TestStandardFormatterNoStackOrWrapped(t *testing.T) {
+	err := getTestError()
+	err.Wraps = nil
+	err.Stack = Stack{}
+	result := err.Error()
+	expect := `SomeOtherFunctionName [file.go:1] oh no!`
+	if result != expect {
+		t.Fatalf("Expected\n%v\nbut got\n%v", expect, result)
 	}
 }

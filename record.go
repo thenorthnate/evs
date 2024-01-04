@@ -19,7 +19,7 @@ func newRecord(err *Error) *Record {
 // New creates a new [Record] with the given message and the Std error type.
 func New(msg string) *Record {
 	err := newError(initialSkip)
-	ctx := newContext(initialSkip, msg, nil)
+	ctx := newContext(initialSkip, msg)
 	err.Details = append(err.Details, ctx)
 	return newRecord(err)
 }
@@ -27,7 +27,7 @@ func New(msg string) *Record {
 // Newf creates a new [Record] with the given formatted message and the Std error type.
 func Newf(msg string, args ...any) *Record {
 	err := newError(initialSkip)
-	ctx := newContext(initialSkip, fmt.Sprintf(msg, args...), nil)
+	ctx := newContext(initialSkip, fmt.Sprintf(msg, args...))
 	err.Details = append(err.Details, ctx)
 	return newRecord(err)
 }
@@ -74,7 +74,7 @@ func (rec *Record) Msg(msg string) *Record {
 	if rec.err == nil {
 		return rec
 	}
-	ctx := newContext(initialSkip, msg, nil)
+	ctx := newContext(initialSkip, msg)
 	rec.err.Details = append(rec.err.Details, ctx)
 	return rec
 }
@@ -84,7 +84,7 @@ func (rec *Record) Msgf(msg string, args ...any) *Record {
 	if rec.err == nil {
 		return rec
 	}
-	ctx := newContext(initialSkip, fmt.Sprintf(msg, args...), nil)
+	ctx := newContext(initialSkip, fmt.Sprintf(msg, args...))
 	rec.err.Details = append(rec.err.Details, ctx)
 	return rec
 }

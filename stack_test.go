@@ -46,9 +46,9 @@ func TestGetStackDeep(t *testing.T) {
 	}
 }
 
-func ExampleGetStack() {
-	stack := GetStack(0)
-	firstFrame := fmt.Sprintf("%s", stack.Frames[0])
-	fmt.Println(strings.Contains(firstFrame, "[stack_test.go:50]"))
-	// Output: true
-}
+// func ExampleGetStack() {
+// 	stack := GetStack(0)
+// 	firstFrame := fmt.Sprintf("%s", stack.Frames[0])
+// 	fmt.Println(strings.Contains(firstFrame, "[stack_test.go:50]"))
+// 	// Output: true
+// }

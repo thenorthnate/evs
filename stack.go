@@ -1,10 +1,7 @@
 package evs
 
 import (
-	"fmt"
-	"io"
 	"runtime"
-	"strings"
 )
 
 const (
@@ -29,17 +26,6 @@ func CurrentFrame(skip int) Frame {
 		Line:     line,
 		File:     file,
 		Function: function.Name(),
-	}
-}
-
-// String implements the [fmt.Stringer] interface.
-func (frame Frame) Format(s fmt.State, verb rune) {
-	fileParts := strings.Split(frame.File, "/")
-	switch verb {
-	case 's':
-		_, _ = fmt.Fprintf(s, "[%v:%v]", fileParts[len(fileParts)-1], frame.Line)
-	default:
-		_, _ = fmt.Fprintf(s, "%v [%v:%v]", frame.Function, fileParts[len(fileParts)-1], frame.Line)
 	}
 }
 
@@ -92,17 +78,5 @@ func getCallerPCs(skip int) []uintptr {
 			callerPCs = make([]uintptr, stackDepth)
 			count = runtime.Callers(skip, callerPCs)
 		}
-	}
-}
-
-// String implements the [fmt.Formatter] interface.
-func (stack Stack) Format(s fmt.State, verb rune) {
-	if len(stack.Frames) == 0 {
-		return
-	}
-	_, _ = io.WriteString(s, "\nWith Stacktrace:\n")
-	for _, frame := range stack.Frames {
-		frame.Format(s, verb)
-		_, _ = io.WriteString(s, "\n")
 	}
 }

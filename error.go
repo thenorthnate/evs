@@ -3,7 +3,6 @@ package evs
 import (
 	"errors"
 	"fmt"
-	"io"
 )
 
 const (
@@ -28,30 +27,13 @@ var (
 type Context struct {
 	Message  string
 	Location Frame
-	Args     any
 }
 
-func newContext(skip int, message string, args any) Context {
+func newContext(skip int, message string) Context {
 	skip++
 	return Context{
 		Message:  message,
 		Location: CurrentFrame(skip),
-		Args:     args,
-	}
-}
-
-// Format implements [fmt.Formatter] interface.
-func (ctx Context) Format(s fmt.State, verb rune) {
-	ctx.Location.Format(s, verb)
-	_, _ = io.WriteString(s, ctx.Message)
-	if ctx.Args != nil {
-		formattable, ok := ctx.Args.(fmt.Formatter)
-		if ok {
-			formattable.Format(s, verb)
-		} else {
-			_, _ = fmt.Fprintf(s, "\n%v", ctx.Args)
-		}
-
 	}
 }
 
@@ -60,6 +42,7 @@ type Error struct {
 	Wraps   error
 	Stack   Stack
 	Details []Context
+	Args    any
 	f       Formatter
 }
 
