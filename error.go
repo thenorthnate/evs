@@ -3,7 +3,6 @@ package evs
 import (
 	"errors"
 	"fmt"
-	"strings"
 )
 
 const (
@@ -14,62 +13,76 @@ var (
 	// IncludeStack is used to determine whether or not a stacktrace should be captured with
 	// new errors. By default it is set to true.
 	IncludeStack = true
+	// SurfaceLevel controls how [From] operates. By default, if the error provided to [From] is an [Error]
+	// the given error is not "wrapped" but instead combined with any additional details you give it. If the
+	// error is something else, but contains an [Error] that can be retreived via "Unwrap" it will
+	// remain invisible. By setting [SurfaceLevel] to false, that means that using [From] will inspect the
+	// full error stack via a call to [errors.As] and will drop other higher order errors if they exist.
+	SurfaceLevel = true
 	// compiler type enforcement
-	_ = error(&Error[Std]{})
+	_ = error(&Error{})
 )
 
+// Detail provides a way to pair a message with the location in the code that it came from.
+type Detail struct {
+	Message  string
+	Location Frame
+}
+
+func newDetail(skip int, message string) Detail {
+	skip++
+	return Detail{
+		Message:  message,
+		Location: CurrentFrame(skip),
+	}
+}
+
 // Error implements both the Error interface as well as Unwrap.
-type Error[T any] struct {
-	wraps   error
-	stack   Stack
-	message string
-	kind    T
+type Error struct {
+	Wraps   error
+	Stack   Stack
+	Details []Detail
+	f       Formatter
 }
 
-func newError[T any](skip int) *Error[T] {
+func newError(skip int) *Error {
 	skip++
-	err := &Error[T]{}
+	err := &Error{
+		// Details: []Detail{},
+		f: GetFormatterFunc(),
+	}
 	if IncludeStack {
-		err.stack = GetStack(skip)
+		err.Stack = GetStack(skip)
 	}
 	return err
 }
 
-func from[T any](skip int, wraps error) *Error[T] {
+func from(skip int, wraps error) *Error {
 	skip++
-	check := &Error[T]{}
-	if errors.As(wraps, &check) {
-		return check
+	if SurfaceLevel {
+		err, ok := wraps.(*Error)
+		if ok {
+			return err
+		}
+	} else {
+		check := &Error{}
+		if errors.As(wraps, &check) {
+			return check
+		}
 	}
-	err := newError[T](skip)
-	err.wraps = wraps
+	err := newError(skip)
+	err.Wraps = wraps
 	return err
-}
-
-// GetKind returns the kind of Error. It is only valid if you set it via a call to [Kind].
-func (err *Error[T]) GetKind(kind T) T {
-	return err.kind
 }
 
 // Error implements the error interface.
-func (err *Error[T]) Error() string {
-	parts := []string{fmt.Sprintf("%T: %v", err, err.message)}
-	if err.wraps != nil {
-		if err.message == "" {
-			parts[0] = parts[0] + err.wraps.Error()
-		} else {
-			parts = append(parts, err.wraps.Error())
-		}
-	}
-	if len(err.stack.Frames) > 0 {
-		parts = append(parts, "\nWith Stacktrace:", err.stack.String())
-	}
-	return strings.Join(parts, "\n")
+func (err *Error) Error() string {
+	return fmt.Sprintf("%+v", err)
 }
 
 // Unwrap allows you to unwrap any internal error which makes the implementation compatible with [errors.As].
-func (err *Error[T]) Unwrap() error { return err.wraps }
+func (err *Error) Unwrap() error { return err.Wraps }
 
-// String implements the [fmt.Stringer] interface. It only returns the message from the Error. This is useful
-// for structured logging if you don't want to see the stack trace and other details in the message of a log.
-func (err *Error[T]) String() string { return err.message }
+func (err *Error) Format(state fmt.State, verb rune) {
+	err.f.Format(err, state, verb)
+}

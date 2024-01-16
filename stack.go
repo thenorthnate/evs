@@ -2,13 +2,32 @@ package evs
 
 import (
 	"runtime"
-	"strings"
 )
 
 const (
 	startStackDepth = 10
 	maxStackDepth   = 200
 )
+
+// Frame defines a single frame in a stack trace.
+type Frame struct {
+	Line     int
+	File     string
+	Function string
+}
+
+// CurrentFrame gets the location information for the code point where this function was called from (or
+// anywhere up or down the stack from there depending on the skip value given.)
+func CurrentFrame(skip int) Frame {
+	skip++
+	pc, file, line, _ := runtime.Caller(skip)
+	function := runtime.FuncForPC(pc)
+	return Frame{
+		Line:     line,
+		File:     file,
+		Function: function.Name(),
+	}
+}
 
 // Stack contains a stack trace made up of individual frames.
 type Stack struct {
@@ -60,13 +79,4 @@ func getCallerPCs(skip int) []uintptr {
 			count = runtime.Callers(skip, callerPCs)
 		}
 	}
-}
-
-// String implements the [fmt.Stringer] interface.
-func (stack Stack) String() string {
-	lines := make([]string, len(stack.Frames))
-	for index, frame := range stack.Frames {
-		lines[index] = frame.String()
-	}
-	return strings.Join(lines, "\n")
 }
