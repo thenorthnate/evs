@@ -19,32 +19,18 @@ func newRecord(err *Error) *Record {
 // New creates a new [Record] with the given message and the Std error type.
 func New(msg string) *Record {
 	err := newError(initialSkip)
-	ctx := newContext(initialSkip, msg)
-	err.Details = append(err.Details, ctx)
+	detail := newDetail(initialSkip, msg)
+	err.Details = append(err.Details, detail)
 	return newRecord(err)
 }
 
 // Newf creates a new [Record] with the given formatted message and the Std error type.
 func Newf(msg string, args ...any) *Record {
 	err := newError(initialSkip)
-	ctx := newContext(initialSkip, fmt.Sprintf(msg, args...))
-	err.Details = append(err.Details, ctx)
+	detail := newDetail(initialSkip, fmt.Sprintf(msg, args...))
+	err.Details = append(err.Details, detail)
 	return newRecord(err)
 }
-
-// NewT creates a new [Record] with the given message and the generic type specified.
-// func NewT[T any](msg string) *Record {
-// 	err := newError(initialSkip)
-// 	err.Messages = append(err.Messages, msg)
-// 	return newRecord(err)
-// }
-
-// NewTf creates a new [Record] with the given formatted message and the generic type specified.
-// func NewTf[T any](msg string, args ...any) *Record {
-// 	err := newError(initialSkip)
-// 	err.Messages = append(err.Messages, fmt.Sprintf(msg, args...))
-// 	return newRecord(err)
-// }
 
 // From generates a new record from the given error. If the error is nil, the record will contain a nil internal
 // [Error]. If the given error is not nil, it first checks to see if it already contains a [Error]. If it does, it
@@ -59,23 +45,13 @@ func From(err error) *Record {
 	return newRecord(newErr)
 }
 
-// FromT is exactly like [From] except that it requires you to specify the generic type to use instead of defaulting
-// to the [Std] type.
-// func FromT[T any](err error) *Record {
-// 	if err == nil {
-// 		return newRecord(nil)
-// 	}
-// 	newErr := from[T](initialSkip, err)
-// 	return newRecord(newErr)
-// }
-
 // Msg provides a mechanism to set the error message directly.
 func (rec *Record) Msg(msg string) *Record {
 	if rec.err == nil {
 		return rec
 	}
-	ctx := newContext(initialSkip, msg)
-	rec.err.Details = append(rec.err.Details, ctx)
+	detail := newDetail(initialSkip, msg)
+	rec.err.Details = append(rec.err.Details, detail)
 	return rec
 }
 
@@ -84,8 +60,8 @@ func (rec *Record) Msgf(msg string, args ...any) *Record {
 	if rec.err == nil {
 		return rec
 	}
-	ctx := newContext(initialSkip, fmt.Sprintf(msg, args...))
-	rec.err.Details = append(rec.err.Details, ctx)
+	detail := newDetail(initialSkip, fmt.Sprintf(msg, args...))
+	rec.err.Details = append(rec.err.Details, detail)
 	return rec
 }
 
@@ -99,16 +75,6 @@ func (rec *Record) DropStack(message string, args ...any) *Record {
 	rec.err.Stack = Stack{}
 	return rec
 }
-
-// Kind allows you to set the error kind. This is not used internally, but can be useful for your
-// own use cases if you want to set a specific (computer-parsable) reason for the error.
-// func (rec *Record) Kind(kind T) *Record {
-// 	if rec.err == nil {
-// 		return rec
-// 	}
-// 	rec.err.Kind = kind
-// 	return rec
-// }
 
 // Set directly assigns the given error to the internal wrapped error. It overrides any previously wrapped
 // error that may have already been in place.

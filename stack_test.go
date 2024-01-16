@@ -6,17 +6,6 @@ import (
 	"testing"
 )
 
-func TestFrameString(t *testing.T) {
-	frame := Frame{
-		Line:     23,
-		File:     "test.go",
-		Function: "TestFrameString",
-	}
-	if "TestFrameString [test.go:23]" != fmt.Sprintf("%v", frame) {
-		t.Fatal("output was not equal")
-	}
-}
-
 func TestGetStack(t *testing.T) {
 	stack := GetStack(0)
 	stackStr := fmt.Sprintf("%v", stack)

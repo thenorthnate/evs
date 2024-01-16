@@ -23,15 +23,15 @@ var (
 	_ = error(&Error{})
 )
 
-// Context provides a way to integrate your own details into the Error.
-type Context struct {
+// Detail provides a way to pair a message with the location in the code that it came from.
+type Detail struct {
 	Message  string
 	Location Frame
 }
 
-func newContext(skip int, message string) Context {
+func newDetail(skip int, message string) Detail {
 	skip++
-	return Context{
+	return Detail{
 		Message:  message,
 		Location: CurrentFrame(skip),
 	}
@@ -41,16 +41,15 @@ func newContext(skip int, message string) Context {
 type Error struct {
 	Wraps   error
 	Stack   Stack
-	Details []Context
-	Args    any
+	Details []Detail
 	f       Formatter
 }
 
 func newError(skip int) *Error {
 	skip++
 	err := &Error{
-		Details: []Context{},
-		f:       GetFormatterFunc(),
+		// Details: []Detail{},
+		f: GetFormatterFunc(),
 	}
 	if IncludeStack {
 		err.Stack = GetStack(skip)

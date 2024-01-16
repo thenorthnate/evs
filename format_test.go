@@ -15,7 +15,7 @@ func getTestError() Error {
 				Function: "FunctionName",
 			}},
 		},
-		Details: []Context{{
+		Details: []Detail{{
 			Message: "oh no!",
 			Location: Frame{
 				Line:     1,
@@ -30,7 +30,7 @@ func getTestError() Error {
 func TestStandardFormatter(t *testing.T) {
 	err := getTestError()
 	result := err.Error()
-	expect := `bad error
+	expect := `*evs.Error: bad error
 SomeOtherFunctionName [file.go:1] oh no!
 
 With Stacktrace:
@@ -44,7 +44,7 @@ func TestStandardFormatterNoStack(t *testing.T) {
 	err := getTestError()
 	err.Stack = Stack{}
 	result := err.Error()
-	expect := `bad error
+	expect := `*evs.Error: bad error
 SomeOtherFunctionName [file.go:1] oh no!`
 	if result != expect {
 		t.Fatalf("Expected\n%v\nbut got\n%v", expect, result)
@@ -56,7 +56,7 @@ func TestStandardFormatterNoStackOrWrapped(t *testing.T) {
 	err.Wraps = nil
 	err.Stack = Stack{}
 	result := err.Error()
-	expect := `SomeOtherFunctionName [file.go:1] oh no!`
+	expect := `*evs.Error: oh no!`
 	if result != expect {
 		t.Fatalf("Expected\n%v\nbut got\n%v", expect, result)
 	}

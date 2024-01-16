@@ -41,29 +41,26 @@ func (sf standardFormatter) formatWrappedError(e *Error, s fmt.State, verb rune)
 			formattable.Format(s, verb)
 			_, _ = io.WriteString(s, "\n")
 		} else {
-			_, _ = io.WriteString(s, e.Wraps.Error()+"\n")
+			_, _ = fmt.Fprintf(s, "%T: %s\n", e, e.Wraps.Error())
 		}
 	}
 }
 
 func (sf standardFormatter) formatDetails(e *Error, s fmt.State, verb rune) {
-	for _, item := range e.Details {
-		sf.formatSingleContext(item, s, verb)
+	if len(e.Details) > 0 && e.Wraps == nil {
+		_, _ = fmt.Fprintf(s, "%T: %v", e, e.Details[0].Message)
+	}
+	for i := range e.Details {
+		if i == 0 && e.Wraps == nil {
+			continue
+		}
+		sf.formatSingleDetail(e.Details[i], s, verb)
 	}
 }
 
-func (sf standardFormatter) formatSingleContext(ctx Context, s fmt.State, verb rune) {
-	sf.formatFrame(ctx.Location, s, verb)
-	_, _ = io.WriteString(s, " "+ctx.Message)
-	// if ctx.Args != nil {
-	// 	formattable, ok := ctx.Args.(fmt.Formatter)
-	// 	if ok {
-	// 		formattable.Format(s, verb)
-	// 	} else {
-	// 		_, _ = fmt.Fprintf(s, "\n%v", ctx.Args)
-	// 	}
-
-	// }
+func (sf standardFormatter) formatSingleDetail(d Detail, s fmt.State, verb rune) {
+	sf.formatFrame(d.Location, s, verb)
+	_, _ = io.WriteString(s, " "+d.Message)
 }
 
 func (sf standardFormatter) formatFrame(frame Frame, s fmt.State, verb rune) {
