@@ -68,7 +68,7 @@ func (rec *Record) Msgf(msg string, args ...any) *Record {
 // DropStack allows you to remove the stacktrace for this specific error. You might use this if you
 // generally want the full stacktrace for everything (thus [IncludeStack]==true), but you don't want
 // this error to have it.
-func (rec *Record) DropStack(message string, args ...any) *Record {
+func (rec *Record) DropStack() *Record {
 	if rec.err == nil {
 		return rec
 	}
@@ -98,5 +98,8 @@ func (rec *Record) Fmt(f Formatter) *Record {
 
 // Err returns the error that you've built up via the other methods.
 func (rec *Record) Err() error {
+	if rec.err == nil {
+		return nil
+	}
 	return rec.err
 }
