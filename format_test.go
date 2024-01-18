@@ -1,6 +1,7 @@
 package evs
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 )
@@ -23,11 +24,11 @@ func getTestError() Error {
 				Function: "SomeOtherFunctionName",
 			},
 		}},
-		f: standardFormatter{},
+		f: textFormatter{},
 	}
 }
 
-func TestStandardFormatter(t *testing.T) {
+func TestTextFormatter(t *testing.T) {
 	err := getTestError()
 	result := err.Error()
 	expect := `*evs.Error: bad error
@@ -40,7 +41,7 @@ FunctionName [file.go:0]`
 	}
 }
 
-func TestStandardFormatterNoStack(t *testing.T) {
+func TestTextFormatterNoStack(t *testing.T) {
 	err := getTestError()
 	err.Stack = Stack{}
 	result := err.Error()
@@ -51,7 +52,7 @@ SomeOtherFunctionName [file.go:1] oh no!`
 	}
 }
 
-func TestStandardFormatterNoStackOrWrapped(t *testing.T) {
+func TestTextFormatterNoStackOrWrapped(t *testing.T) {
 	err := getTestError()
 	err.Wraps = nil
 	err.Stack = Stack{}
@@ -59,5 +60,39 @@ func TestStandardFormatterNoStackOrWrapped(t *testing.T) {
 	expect := `*evs.Error: oh no!`
 	if result != expect {
 		t.Fatalf("Expected\n%v\nbut got\n%v", expect, result)
+	}
+}
+
+func TestJSONFormatter(t *testing.T) {
+	err := New("something sad happened").
+		Fmt(JSONFormatter()).
+		Err()
+	result := struct {
+		Wraps   string
+		Stack   Stack
+		Details []Detail
+	}{}
+	if err := json.Unmarshal([]byte(err.Error()), &result); err != nil {
+		t.Fatalf("encountered unexpected error: %v", err)
+	}
+	if len(result.Details) != 1 {
+		t.Fatalf("expected a single set of details but got %v", len(result.Details))
+	}
+}
+
+func TestJSONFormatter_From(t *testing.T) {
+	err := From(errors.New("something sad happened")).
+		Fmt(JSONFormatter()).
+		Err()
+	result := struct {
+		Wraps   string
+		Stack   Stack
+		Details []Detail
+	}{}
+	if err := json.Unmarshal([]byte(err.Error()), &result); err != nil {
+		t.Fatalf("encountered unexpected error: %v", err)
+	}
+	if len(result.Details) != 0 {
+		t.Fatalf("expected a single set of details but got %v", len(result.Details))
 	}
 }
