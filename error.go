@@ -6,6 +6,10 @@ import (
 )
 
 const (
+	KindIO      = "IO"
+	KindType    = "Type"
+	KindUnknown = ""
+	KindValue   = "Value"
 	initialSkip = 1
 )
 
@@ -13,15 +17,16 @@ var (
 	// IncludeStack is used to determine whether or not a stacktrace should be captured with
 	// new errors. By default it is set to true.
 	IncludeStack = true
-	// SurfaceLevel controls how [From] operates. By default, if the error provided to [From] is an [Error]
-	// the given error is not "wrapped" but instead combined with any additional details you give it. If the
-	// error is something else, but contains an [Error] that can be retreived via "Unwrap" it will
-	// remain invisible. By setting [SurfaceLevel] to false, that means that using [From] will inspect the
-	// full error stack via a call to [errors.As] and will drop other higher order errors if they exist.
-	SurfaceLevel = true
+	// InspectFull controls how [From] operates. By default, the full error stack will be inspected
+	// via [errors.As]. If any [evs.Error] exists within the stack, that error is extracted and returned.
+	// You can turn this behavior off, by setting InspectFull to false. This will then only check the
+	// error itself (without calling unwrap).
+	InspectFull = true
 	// compiler type enforcement
 	_ = error(&Error{})
 )
+
+type Kind string
 
 // Detail provides a way to pair a message with the location in the code that it came from.
 type Detail struct {
@@ -42,6 +47,7 @@ type Error struct {
 	Wraps   error
 	Stack   Stack
 	Details []Detail
+	Kind    Kind
 	f       Formatter
 }
 
@@ -59,15 +65,15 @@ func newError(skip int) *Error {
 
 func from(skip int, wraps error) *Error {
 	skip++
-	if SurfaceLevel {
-		err, ok := wraps.(*Error)
-		if ok {
-			return err
-		}
-	} else {
+	if InspectFull {
 		check := &Error{}
 		if errors.As(wraps, &check) {
 			return check
+		}
+	} else {
+		err, ok := wraps.(*Error)
+		if ok {
+			return err
 		}
 	}
 	err := newError(skip)
@@ -83,6 +89,17 @@ func (err *Error) Error() string {
 // Unwrap allows you to unwrap any internal error which makes the implementation compatible with [errors.As].
 func (err *Error) Unwrap() error { return err.Wraps }
 
+// Format implements the [fmt.Formatter] interface.
 func (err *Error) Format(state fmt.State, verb rune) {
 	err.f.Format(err, state, verb)
+}
+
+// KindOf returns the Kind of this error. If it cannot determine the Kind (e.g. because
+// maybe the provided error is not an [evs.Error]) it returns [KindUnknown].
+func KindOf(err error) Kind {
+	e := &Error{}
+	if errors.As(err, &e) {
+		return e.Kind
+	}
+	return KindUnknown
 }

@@ -105,7 +105,7 @@ func TestRecord_Set(t *testing.T) {
 	}
 }
 
-func TestFromExistingShallow(t *testing.T) {
+func TestFromExisting_InspectFull(t *testing.T) {
 	first := evs.New("bad day").Err()
 	second := evs.From(first).Err()
 	if second == nil {
@@ -120,7 +120,46 @@ func TestFromExistingShallow(t *testing.T) {
 	}
 }
 
-func TestFromExistingShallowInvisible(t *testing.T) {
+func TestFromExisting_InspectFullFalse(t *testing.T) {
+	evs.InspectFull = false
+	defer func() {
+		evs.InspectFull = true
+	}()
+	first := evs.New("bad day").Err()
+	second := evs.From(first).Err()
+	if second == nil {
+		t.Fatal("error should not be nil")
+	}
+	expect := &evs.Error{}
+	if !errors.As(second, &expect) {
+		t.Fatal("expected error to have type Error but it did not")
+	}
+	if expect.Wraps != nil {
+		t.Fatalf("wraps should be nil but found: %v", expect.Wraps)
+	}
+}
+
+func TestFrom_InspectFullTrue(t *testing.T) {
+	first := evs.New("bad day").Err()
+	second := fmt.Errorf("bad error: %w", first)
+	third := evs.From(second).Err()
+	if third == nil {
+		t.Fatal("error should not be nil")
+	}
+	expect := &evs.Error{}
+	if !errors.As(third, &expect) {
+		t.Fatal("expected error to have type Error but it did not")
+	}
+	if expect.Wraps != nil {
+		t.Fatalf("wraps should be nil but found: %v", expect.Wraps)
+	}
+}
+
+func TestFrom_InspectFullFalse(t *testing.T) {
+	evs.InspectFull = false
+	defer func() {
+		evs.InspectFull = true
+	}()
 	first := evs.New("bad day").Err()
 	second := fmt.Errorf("bad error: %w", first)
 	third := evs.From(second).Err()
@@ -136,22 +175,18 @@ func TestFromExistingShallowInvisible(t *testing.T) {
 	}
 }
 
-func TestFromExistingDeep(t *testing.T) {
-	evs.SurfaceLevel = false
-	defer func() {
-		evs.SurfaceLevel = true
-	}()
+func TestKindOf(t *testing.T) {
 	first := evs.New("bad day").Err()
-	second := fmt.Errorf("bad error: %w", first)
-	third := evs.From(second).Err()
-	if third == nil {
-		t.Fatal("error should not be nil")
+	k := evs.KindOf(first)
+	if k != evs.KindUnknown {
+		t.Fatal("kind was supposed to be unknown")
 	}
-	expect := &evs.Error{}
-	if !errors.As(third, &expect) {
-		t.Fatal("expected error to have type Error but it did not")
-	}
-	if expect.Wraps != nil {
-		t.Fatalf("wraps should be nil but found: %v", expect.Wraps)
+}
+
+func TestKindOf_OtherError(t *testing.T) {
+	first := errors.New("uh oh!")
+	k := evs.KindOf(first)
+	if k != evs.KindUnknown {
+		t.Fatal("kind was supposed to be unknown")
 	}
 }
