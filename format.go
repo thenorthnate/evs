@@ -1,6 +1,7 @@
 package evs
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -9,8 +10,8 @@ import (
 var (
 	// GetFormatterFunc should return the formatter that gets used in each instantiation of an error. You can
 	// supply your own implementation if you would like to change how errors are formatted. See the source
-	// code for the [StandardFormatter] to see how it is implemented.
-	GetFormatterFunc = DefaultFormatter
+	// code for the [textFormatter] to see how it is implemented.
+	GetFormatterFunc = TextFormatter
 )
 
 // Formatter is almost the same as the [fmt.Formatter] but passes the [Error] in as well.
@@ -18,23 +19,23 @@ type Formatter interface {
 	Format(e *Error, f fmt.State, verb rune)
 }
 
-// DefaultFormatter returns the [Formatter] that is used by default. You can use this to restore default
+// TextFormatter returns the [Formatter] that is used by default. You can use this to restore default
 // behavior if you swapped in your own Formatter at some point.
-func DefaultFormatter() Formatter {
-	return standardFormatter{}
+func TextFormatter() Formatter {
+	return textFormatter{}
 }
 
-// standardFormatter is the default [Formatter] used in the errors.
-type standardFormatter struct{}
+// textFormatter is the default [Formatter] used in the errors.
+type textFormatter struct{}
 
 // Format implements the [Formatter] interface.
-func (sf standardFormatter) Format(e *Error, s fmt.State, verb rune) {
-	sf.formatWrappedError(e, s, verb)
-	sf.formatDetails(e, s, verb)
-	sf.formatStack(e.Stack, s, verb)
+func (f textFormatter) Format(e *Error, s fmt.State, verb rune) {
+	f.formatWrappedError(e, s, verb)
+	f.formatDetails(e, s, verb)
+	f.formatStack(e.Stack, s, verb)
 }
 
-func (sf standardFormatter) formatWrappedError(e *Error, s fmt.State, verb rune) {
+func (f textFormatter) formatWrappedError(e *Error, s fmt.State, verb rune) {
 	if e.Wraps != nil {
 		formattable, ok := e.Wraps.(fmt.Formatter)
 		if ok {
@@ -46,7 +47,7 @@ func (sf standardFormatter) formatWrappedError(e *Error, s fmt.State, verb rune)
 	}
 }
 
-func (sf standardFormatter) formatDetails(e *Error, s fmt.State, verb rune) {
+func (f textFormatter) formatDetails(e *Error, s fmt.State, verb rune) {
 	if len(e.Details) > 0 && e.Wraps == nil {
 		_, _ = fmt.Fprintf(s, "%T: %v", e, e.Details[0].Message)
 	}
@@ -54,16 +55,16 @@ func (sf standardFormatter) formatDetails(e *Error, s fmt.State, verb rune) {
 		if i == 0 && e.Wraps == nil {
 			continue
 		}
-		sf.formatSingleDetail(e.Details[i], s, verb)
+		f.formatSingleDetail(e.Details[i], s, verb)
 	}
 }
 
-func (sf standardFormatter) formatSingleDetail(d Detail, s fmt.State, verb rune) {
-	sf.formatFrame(d.Location, s, verb)
+func (f textFormatter) formatSingleDetail(d Detail, s fmt.State, verb rune) {
+	f.formatFrame(d.Location, s, verb)
 	_, _ = io.WriteString(s, " "+d.Message)
 }
 
-func (sf standardFormatter) formatFrame(frame Frame, s fmt.State, verb rune) {
+func (f textFormatter) formatFrame(frame Frame, s fmt.State, verb rune) {
 	fileParts := strings.Split(frame.File, "/")
 	switch verb {
 	case 's':
@@ -73,16 +74,44 @@ func (sf standardFormatter) formatFrame(frame Frame, s fmt.State, verb rune) {
 	}
 }
 
-func (sf standardFormatter) formatStack(stack Stack, s fmt.State, verb rune) {
+func (f textFormatter) formatStack(stack Stack, s fmt.State, verb rune) {
 	if len(stack.Frames) == 0 {
 		return
 	}
 	_, _ = io.WriteString(s, "\n\nWith Stacktrace:\n")
 	for i, frame := range stack.Frames {
-		sf.formatFrame(frame, s, verb)
+		f.formatFrame(frame, s, verb)
 		if i == len(stack.Frames)-1 {
 			break
 		}
 		_, _ = io.WriteString(s, "\n")
 	}
+}
+
+type jsonFormatter struct{}
+
+// JSONFormatter can be used if you prefer the errors to be in a format that a robot can parse. It's
+// not perfect though since the error type can't directly be marshalled into JSON. So any wrapped errors
+// are turned into a string during the marshalling process.
+func JSONFormatter() Formatter {
+	return jsonFormatter{}
+}
+
+// Format implements the [Formatter] interface.
+func (f jsonFormatter) Format(e *Error, s fmt.State, verb rune) {
+	errString := ""
+	if e.Wraps != nil {
+		errString = e.Wraps.Error()
+	}
+	standIn := struct {
+		Wraps   string
+		Stack   Stack
+		Details []Detail
+	}{
+		Wraps:   errString,
+		Stack:   e.Stack,
+		Details: e.Details,
+	}
+	encoder := json.NewEncoder(s)
+	_ = encoder.Encode(standIn)
 }
