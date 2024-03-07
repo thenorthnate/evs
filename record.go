@@ -96,6 +96,15 @@ func (rec *Record) Fmt(f Formatter) *Record {
 	return rec
 }
 
+// Kind sets the error kind.
+func (rec *Record) Kind(k Kind) *Record {
+	if rec.err == nil {
+		return rec
+	}
+	rec.err.Kind = k
+	return rec
+}
+
 // Err returns the error that you've built up via the other methods.
 func (rec *Record) Err() error {
 	if rec.err == nil {

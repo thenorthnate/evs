@@ -54,7 +54,6 @@ type Error struct {
 func newError(skip int) *Error {
 	skip++
 	err := &Error{
-		// Details: []Detail{},
 		f: GetFormatterFunc(),
 	}
 	if IncludeStack {

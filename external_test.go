@@ -190,3 +190,18 @@ func TestKindOf_OtherError(t *testing.T) {
 		t.Fatal("kind was supposed to be unknown")
 	}
 }
+
+func TestKind(t *testing.T) {
+	first := evs.New("bad day").Kind(evs.KindIO).Err()
+	k := evs.KindOf(first)
+	if k != evs.KindIO {
+		t.Fatal("kind was supposed to be IO")
+	}
+}
+
+func TestKind_FromNil(t *testing.T) {
+	err := evs.From(nil).Kind(evs.KindIO).Err()
+	if err != nil {
+		t.Fatal("error was supposed to be nil")
+	}
+}
