@@ -19,16 +19,14 @@ func newRecord(err *Error) *Record {
 // New creates a new [Record] with the given message and the Std error type.
 func New(msg string) *Record {
 	err := newError(initialSkip)
-	detail := newDetail(initialSkip, msg)
-	err.Details = append(err.Details, detail)
+	err.Details = append(err.Details, msg)
 	return newRecord(err)
 }
 
 // Newf creates a new [Record] with the given formatted message and the Std error type.
 func Newf(msg string, args ...any) *Record {
 	err := newError(initialSkip)
-	detail := newDetail(initialSkip, fmt.Sprintf(msg, args...))
-	err.Details = append(err.Details, detail)
+	err.Details = append(err.Details, fmt.Sprintf(msg, args...))
 	return newRecord(err)
 }
 
@@ -50,8 +48,7 @@ func (rec *Record) Msg(msg string) *Record {
 	if rec.err == nil {
 		return rec
 	}
-	detail := newDetail(initialSkip, msg)
-	rec.err.Details = append(rec.err.Details, detail)
+	rec.err.Details = append(rec.err.Details, msg)
 	return rec
 }
 
@@ -60,8 +57,7 @@ func (rec *Record) Msgf(msg string, args ...any) *Record {
 	if rec.err == nil {
 		return rec
 	}
-	detail := newDetail(initialSkip, fmt.Sprintf(msg, args...))
-	rec.err.Details = append(rec.err.Details, detail)
+	rec.err.Details = append(rec.err.Details, fmt.Sprintf(msg, args...))
 	return rec
 }
 
@@ -93,6 +89,15 @@ func (rec *Record) Fmt(f Formatter) *Record {
 		return rec
 	}
 	rec.err.f = f
+	return rec
+}
+
+// Kind sets the error kind.
+func (rec *Record) Kind(k Kind) *Record {
+	if rec.err == nil {
+		return rec
+	}
+	rec.err.Kind = k
 	return rec
 }
 

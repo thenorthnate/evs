@@ -28,25 +28,11 @@ var (
 
 type Kind string
 
-// Detail provides a way to pair a message with the location in the code that it came from.
-type Detail struct {
-	Message  string
-	Location Frame
-}
-
-func newDetail(skip int, message string) Detail {
-	skip++
-	return Detail{
-		Message:  message,
-		Location: CurrentFrame(skip),
-	}
-}
-
 // Error implements both the Error interface as well as Unwrap.
 type Error struct {
 	Wraps   error
 	Stack   Stack
-	Details []Detail
+	Details []string
 	Kind    Kind
 	f       Formatter
 }
@@ -54,7 +40,6 @@ type Error struct {
 func newError(skip int) *Error {
 	skip++
 	err := &Error{
-		// Details: []Detail{},
 		f: GetFormatterFunc(),
 	}
 	if IncludeStack {
