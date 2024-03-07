@@ -27,7 +27,7 @@ func ExampleFrom() {
 
 func TestNew(t *testing.T) {
 	err := evs.New("terrible error").Err()
-	if !strings.Contains(err.Error(), "*evs.Error: terrible error") {
+	if !strings.Contains(err.Error(), "terrible error") {
 		t.Fatalf("error \n%v\n did not contain expected output", err.Error())
 	}
 	if !strings.Contains(err.Error(), "external_test.go") {
@@ -37,7 +37,7 @@ func TestNew(t *testing.T) {
 
 func TestNewf(t *testing.T) {
 	err := evs.Newf("terrible error: %v", 10).Err()
-	if !strings.Contains(err.Error(), "*evs.Error: terrible error: 10") {
+	if !strings.Contains(err.Error(), "terrible error: 10") {
 		t.Fatal("error did not contain expected output")
 	}
 }
@@ -45,7 +45,7 @@ func TestNewf(t *testing.T) {
 func TestFrom(t *testing.T) {
 	err := errors.New("Hello, world")
 	newErr := evs.From(err).Err()
-	if !strings.Contains(newErr.Error(), "*evs.Error: Hello, world") {
+	if !strings.Contains(newErr.Error(), "Hello, world") {
 		t.Fatalf("error \n%v\n did not contain expected output", newErr.Error())
 	}
 }

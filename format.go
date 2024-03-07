@@ -1,7 +1,6 @@
 package evs
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -42,26 +41,13 @@ func (f textFormatter) formatWrappedError(e *Error, s fmt.State, verb rune) {
 			formattable.Format(s, verb)
 			_, _ = io.WriteString(s, "\n")
 		} else {
-			_, _ = fmt.Fprintf(s, "%T: %s\n", e, e.Wraps.Error())
+			_, _ = fmt.Fprintf(s, "%s\n", e.Wraps.Error())
 		}
 	}
 }
 
 func (f textFormatter) formatDetails(e *Error, s fmt.State, verb rune) {
-	if len(e.Details) > 0 && e.Wraps == nil {
-		_, _ = fmt.Fprintf(s, "%T: %v", e, e.Details[0].Message)
-	}
-	for i := range e.Details {
-		if i == 0 && e.Wraps == nil {
-			continue
-		}
-		f.formatSingleDetail(e.Details[i], s, verb)
-	}
-}
-
-func (f textFormatter) formatSingleDetail(d Detail, s fmt.State, verb rune) {
-	f.formatFrame(d.Location, s, verb)
-	_, _ = io.WriteString(s, " "+d.Message)
+	_, _ = fmt.Fprintf(s, "%v", e.Details)
 }
 
 func (f textFormatter) formatFrame(frame Frame, s fmt.State, verb rune) {
@@ -86,32 +72,4 @@ func (f textFormatter) formatStack(stack Stack, s fmt.State, verb rune) {
 		}
 		_, _ = io.WriteString(s, "\n")
 	}
-}
-
-type jsonFormatter struct{}
-
-// JSONFormatter can be used if you prefer the errors to be in a format that a robot can parse. It's
-// not perfect though since the error type can't directly be marshalled into JSON. So any wrapped errors
-// are turned into a string during the marshalling process.
-func JSONFormatter() Formatter {
-	return jsonFormatter{}
-}
-
-// Format implements the [Formatter] interface.
-func (f jsonFormatter) Format(e *Error, s fmt.State, verb rune) {
-	errString := ""
-	if e.Wraps != nil {
-		errString = e.Wraps.Error()
-	}
-	standIn := struct {
-		Wraps   string
-		Stack   Stack
-		Details []Detail
-	}{
-		Wraps:   errString,
-		Stack:   e.Stack,
-		Details: e.Details,
-	}
-	encoder := json.NewEncoder(s)
-	_ = encoder.Encode(standIn)
 }
